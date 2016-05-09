@@ -44,10 +44,12 @@ function countRedisThings(req, res, next){
 }
 
 app.get("/", addRedisThings, countRedisThings, function(req, res, next){
+    console.log("check");
     var return_me = {
         msg_str: "all worked here are the env vars",
         env_arr: [REDIS_HOST_STR, PORT_INT, req.redis_count_int]
     };
-    res.json(200, return_me);//depreciated on new version of NODE
+    res.json(200, return_me);
+    //depreciated on new version of NODE
     // res.status(200).json(return_me);
 });
