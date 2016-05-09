@@ -1,39 +1,53 @@
-const 
-    REDIS_HOST_STR = REDIS_HOST_STR || "192.168.99.100",
-    REDIS_PORT_INT = REDIS_PORT_INT || 32830,
-    WEB_SERVER_PORT_INT = WEB_SERVER_PORT_INT || 8081;
+const   
+    PORT_INT = process.env.PORT || process.env.npm_package_config_PORT_INT, // EB will set PORT for you
+    REDIS_HOST_STR = process.env.REDIS_HOST_STR || process.env.npm_package_config_REDIS_HOST_STR,
+    REDIS_PORT_INT = process.env.REDIS_PORT_INT || process.env.npm_package_config_REDIS_PORT_INT;
 
 const 
     EXPRESS = require("express"),
     REDIS = require("redis");
-
-var app = EXPRESS(),
-    redis = REDIS.createClient(REDIS_PORT_INT, REDIS_HOST_STR),
-    mw_arr = [];
     
-app.listen(WEB_SERVER_PORT_INT);
+var app = EXPRESS(),
+    redis = REDIS.createClient(REDIS_PORT_INT, REDIS_HOST_STR);
 
-function addUser(req, res, next){
-    redis.SADD("users", req.headers["user-agent"], function(err, success){
-        //err handle
-        next();
+app.listen(PORT_INT);
+
+function addRedisThings(req, res, next){
+    var key_str = "site:unique_hits",  
+        msg_str = "that did not work";
+    redis.SADD(key_str, req.headers["user-agent"], function(err, count_int){
+        if(err){
+            msg_str = err; //obj??
+            res.json(200, {
+                msg_str: msg_str
+            });
+        }else{
+            req.redis_count_int = count_int;
+            next();
+        }
     });
 }
-function getUser(req, res, next){
-    redis.SMEMBERS("users", function(err, users){
-        //err handle
-        req.users_arr = users;
-        next();
+function countRedisThings(req, res, next){
+    var key_str = "site:unique_hits",  
+        msg_str = "that did not work";
+    redis.SCARD(key_str, function(err, count_int){
+        if(err){
+            msg_str = err; //obj??
+            res.json(200, {
+                msg_str: msg_str
+            });
+        }else{
+            req.redis_count_int = count_int;
+            next();
+        }
     });
 }
-function doStuff(req, res){
+
+app.get("/", addRedisThings, countRedisThings, function(req, res, next){
     var return_me = {
-        msg_str: "all ok",
-        all_unique_users_arr: req.users_arr
+        msg_str: "all worked here are the env vars",
+        env_arr: [REDIS_HOST_STR, PORT_INT, req.redis_count_int]
     };
-    res.status(200).json(return_me);
-}
-
-mw_arr = [addUser, getUser];
-
-app.get("/", mw_arr, doStuff);
+    res.json(200, return_me);//depreciated on new version of NODE
+    // res.status(200).json(return_me);
+});
