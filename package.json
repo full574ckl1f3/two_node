@@ -4,9 +4,9 @@
 		"redis": "2.6.0-2"
 	}, 
 	"config": { 
-		"PORT_INT": "8900",
+		"PORT_INT": 8900,
 		"REDIS_HOST_STR": "192.168.99.100",
-		"REDIS_PORT_INT": "32830"
+		"REDIS_PORT_INT": 32830
 	}, 
 	"scripts": { 
 		"start": "node app.js" 
